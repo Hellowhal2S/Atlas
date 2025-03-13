@@ -15,13 +15,16 @@ FVector4 JungleMath::ConvertV3ToV4(FVector vec3)
 
 FMatrix JungleMath::CreateModelMatrix(FVector translation, FVector rotation, FVector scale)
 {
+    FVector newTranslation = FVector(translation.x, translation.z, translation.y * -1);
+    FVector newScale = FVector(scale.x, scale.z, scale.y * -1);
+    FVector newRotation = FVector(rotation.x, rotation.z, rotation.y * -1);
     // 1. 스케일 행렬
-    XMMATRIX scaleMatrix = XMMatrixScaling(scale.x, scale.y, scale.z);
+    XMMATRIX scaleMatrix = XMMatrixScaling(newScale.x, newScale.y, newScale.z);
 
     // 2. 회전 행렬 (쿼터니언 사용)
-    XMVECTOR quatX = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), DegToRad(rotation.x));
-    XMVECTOR quatY = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRad(rotation.y));
-    XMVECTOR quatZ = XMQuaternionRotationAxis(XMVectorSet(0, 0, 1, 0), DegToRad(rotation.z));
+    XMVECTOR quatX = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), DegToRad(newRotation.x));
+    XMVECTOR quatY = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRad(newRotation.y));
+    XMVECTOR quatZ = XMQuaternionRotationAxis(XMVectorSet(0, 0, 1, 0), DegToRad(newRotation.z));
 
     XMVECTOR rotationQuat = XMQuaternionMultiply(quatZ, XMQuaternionMultiply(quatY, quatX));
     rotationQuat = XMQuaternionNormalize(rotationQuat);  // 정규화 필수
@@ -29,7 +32,7 @@ FMatrix JungleMath::CreateModelMatrix(FVector translation, FVector rotation, FVe
     XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotationQuat);
 
     // 3. 이동 행렬
-    XMMATRIX translationMatrix = XMMatrixTranslation(translation.x, translation.y, translation.z);
+    XMMATRIX translationMatrix = XMMatrixTranslation(newTranslation.x, newTranslation.y, newTranslation.z);
 
     // 최종 변환 행렬 (회전 -> 스케일 -> 이동 순서)
     XMMATRIX finalMatrix = XMMatrixMultiply(XMMatrixMultiply(scaleMatrix,rotationMatrix), translationMatrix);
@@ -44,9 +47,48 @@ FMatrix JungleMath::CreateModelMatrix(FVector translation, FVector rotation, FVe
             result.M[i][j] = finalMatrix.r[i].m128_f32[j];  // XMMATRIX에서 FMatrix로 값 복사
         }
     }
-
     return result;
 }
+
+//FMatrix JungleMath::CreateModelMatrix(FVector translation, FVector rotation, FVector scale)
+//{
+//    // Unreal 좌표계 변환: (X, Y, Z) → (Y, Z, X)
+//    FVector unrealTranslation(translation.y, translation.z, translation.x);
+//    FVector unrealRotation(rotation.y, rotation.z, rotation.x);
+//    FVector unrealScale(scale.y, scale.z, scale.x);
+//
+//    // 1. 스케일 행렬
+//    XMMATRIX scaleMatrix = XMMatrixScaling(unrealScale.x, unrealScale.y, unrealScale.z);
+//
+//    // 2. 회전 행렬 (Yaw-Pitch-Roll, 쿼터니언 사용)
+//    XMVECTOR quatX = XMQuaternionRotationAxis(XMVectorSet(1, 0, 0, 0), DegToRad(unrealRotation.x));
+//    XMVECTOR quatY = XMQuaternionRotationAxis(XMVectorSet(0, 1, 0, 0), DegToRad(unrealRotation.y));
+//    XMVECTOR quatZ = XMQuaternionRotationAxis(XMVectorSet(0, 0, 1, 0), DegToRad(unrealRotation.z));
+//
+//    XMVECTOR rotationQuat = XMQuaternionMultiply(quatZ, XMQuaternionMultiply(quatY, quatX));
+//    rotationQuat = XMQuaternionNormalize(rotationQuat);  // 정규화 필수
+//
+//    XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotationQuat);
+//
+//    // 3. 이동 행렬
+//    XMMATRIX translationMatrix = XMMatrixTranslation(unrealTranslation.x, unrealTranslation.y, unrealTranslation.z);
+//
+//    // 최종 변환 행렬 (회전 -> 스케일 -> 이동 순서)
+//    XMMATRIX finalMatrix = XMMatrixMultiply(XMMatrixMultiply(scaleMatrix, rotationMatrix), translationMatrix);
+//
+//    // XMMATRIX -> FMatrix 변환
+//    FMatrix result = FMatrix::Identity;
+//
+//    for (int i = 0; i < 4; i++)
+//    {
+//        for (int j = 0; j < 4; j++)
+//        {
+//            result.M[i][j] = finalMatrix.r[i].m128_f32[j];  // XMMATRIX에서 FMatrix로 값 복사
+//        }
+//    }
+//
+//    return result;  // 이미 Unreal 좌표계이므로 추가 변환 불필요
+//}
 
 FMatrix JungleMath::CreateViewMatrix(FVector eye, FVector target, FVector up)
 {
@@ -81,7 +123,7 @@ FMatrix JungleMath::CreateProjectionMatrix(float fov, float aspect, float nearPl
 
     return Projection;
 }
-
+//
 //FVector JungleMath::FVectorRotate(FVector& origin, const FVector& rotation)
 //{
 //    // 회전 값 (degree -> radian 변환)
@@ -127,6 +169,46 @@ FVector JungleMath::FVectorRotate(FVector& origin, const FVector& rotation)
 
     // 쿼터니언을 이용해 벡터 회전 적용
     return quaternion.RotateVector(origin);
+}
+//FVector JungleMath::FVectorRotate(FVector& origin, const FVector& rotation)
+//{
+//    // DirectX → Unreal 좌표계 변환 (X, Y, Z) → (Y, Z, X)
+//    FVector unrealOrigin(origin.y, origin.z, origin.x);
+//    FVector unrealRotation(rotation.y, rotation.z, rotation.x);
+//
+//    // 회전 각도를 라디안으로 변환
+//    float pitch = DegToRad(unrealRotation.x) * 0.5f;
+//    float yaw = DegToRad(unrealRotation.y) * 0.5f;
+//    float roll = DegToRad(unrealRotation.z) * 0.5f;
+//
+//    // 쿼터니언 생성 (Yaw-Pitch-Roll 순서)
+//    float cosX = cosf(pitch), sinX = sinf(pitch);
+//    float cosY = cosf(yaw), sinY = sinf(yaw);
+//    float cosZ = cosf(roll), sinZ = sinf(roll);
+//
+//    FQuat quaternion;
+//    quaternion.w = cosX * cosY * cosZ + sinX * sinY * sinZ;
+//    quaternion.x = sinX * cosY * cosZ - cosX * sinY * sinZ;
+//    quaternion.y = cosX * sinY * cosZ + sinX * cosY * sinZ;
+//    quaternion.z = cosX * cosY * sinZ - sinX * sinY * cosZ;
+//
+//    // 쿼터니언을 이용해 벡터 회전 적용
+//    FVector rotatedUnreal = quaternion.RotateVector(unrealOrigin);
+//
+//    // Unreal → DirectX 좌표계 변환 (Y, Z, X) → (X, Y, Z)
+//    return FVector(rotatedUnreal.z, rotatedUnreal.x, rotatedUnreal.y);
+//}
+FMatrix JungleMath::ConvertToUnrealMatrix(const FMatrix& directXMatrix)
+{
+    // DirectX -> Unreal 좌표계 변환 행렬
+    FMatrix conversionMatrix;
+    conversionMatrix.M[0][0] = 0;  conversionMatrix.M[0][1] = 0;  conversionMatrix.M[0][2] = 1;  conversionMatrix.M[0][3] = 0;
+    conversionMatrix.M[1][0] = 1;  conversionMatrix.M[1][1] = 0;  conversionMatrix.M[1][2] = 0;  conversionMatrix.M[1][3] = 0;
+    conversionMatrix.M[2][0] = 0;  conversionMatrix.M[2][1] = 1;  conversionMatrix.M[2][2] = 0;  conversionMatrix.M[2][3] = 0;
+    conversionMatrix.M[3][0] = 0;  conversionMatrix.M[3][1] = 0;  conversionMatrix.M[3][2] = 0;  conversionMatrix.M[3][3] = 1;
+
+    // 변환 적용 (변환 행렬 * 원본 행렬)
+    return conversionMatrix * directXMatrix;
 }
 
 

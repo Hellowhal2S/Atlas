@@ -38,7 +38,7 @@ ULocalGizmoComponent::ULocalGizmoComponent()
 
 	UDiscHollowComponent* disc = new UDiscHollowComponent(EPrimitiveColor::RED_X, 0.90, "DiscX");;
 	disc->SetType("DiscX");
-	disc->SetRotation(FVector(0.0f,0.0f,90.0f));
+	disc->SetRotation(FVector(0.0f,90.0f,0.0f));
 	disc->SetParent(this);
 	AttachChildren.push_back(disc);
 	GetWorld()->GetObjectArr().push_back(disc);
@@ -46,6 +46,7 @@ ULocalGizmoComponent::ULocalGizmoComponent()
 
 	disc = new UDiscHollowComponent(EPrimitiveColor::GREEN_Y, 0.90, "DiscY");
 	disc->SetType("DiscY");
+	disc->SetRotation(FVector(90.0f, 0.0f, 0.0f));
 	disc->SetParent(this);
 	AttachChildren.push_back(disc);
 	GetWorld()->GetObjectArr().push_back(disc);
@@ -55,7 +56,7 @@ ULocalGizmoComponent::ULocalGizmoComponent()
 	disc = new UDiscHollowComponent(EPrimitiveColor::BLUE_Z, 0.9, "DiscZ");
 	disc->SetType("DiscZ");
 	disc->SetParent(this);
-	disc->SetRotation(FVector(90.0f,0.0f,0.0f));
+	disc->SetRotation(FVector(0.0f,0.0f,0.0f));
 	AttachChildren.push_back(disc);
 	GetWorld()->GetObjectArr().push_back(disc);
 	HollowDiscArr.push_back(disc);

@@ -226,22 +226,27 @@ int UPlayer::RayIntersectsObject(const FVector& pickPosition, UPrimitiveComponen
 {
 
 	// 오브젝트의 월드 변환 행렬 생성 (위치, 회전, 크기 적용)
+	//FVector newTranslation = FVector(translation.x, translation.z, translation.y * -1);
+	//FVector newScale = FVector(scale.x, scale.z, scale.y * -1);
+	//FVector newRotation = FVector(rotation.x, rotation.z, rotation.y * -1);
+
 	FMatrix scaleMatrix = FMatrix::CreateScale(
 		obj->GetWorldScale().x,
-		obj->GetWorldScale().y,
-		obj->GetWorldScale().z
+		obj->GetWorldScale().z,
+		obj->GetWorldScale().y * -1
 	);
 
 	FMatrix rotationMatrix = FMatrix::CreateRotation(
 		obj->GetWorldRotation().x,
-		obj->GetWorldRotation().y,
-		obj->GetWorldRotation().z
+		obj->GetWorldRotation().z,
+		obj->GetWorldRotation().y * -1
 	);
-
-	FMatrix translationMatrix = FMatrix::CreateTranslationMatrix(obj->GetWorldLocation());
+	FVector newtranslation = FVector(obj->GetWorldLocation().x, obj->GetWorldLocation().z, obj->GetWorldLocation().y * -1);
+	FMatrix translationMatrix = FMatrix::CreateTranslationMatrix(newtranslation);
 
 	// 최종 변환 행렬
 	FMatrix worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
+	//worldMatrix = JungleMath::ConvertToUnrealMatrix(worldMatrix);
 	FMatrix ViewMatrix = GEngineLoop.View;
 	FMatrix inverseMatrix = FMatrix::Inverse(worldMatrix * ViewMatrix);
 
@@ -365,17 +370,17 @@ void UPlayer::ControlTranslation(USceneComponent* pObj, UPrimitiveComponent* Giz
 		}
 		else if (Gizmo->GetType() == "ArrowY")
 		{
-			if (pObj->GetUpVector().y >= 0)
-				pObj->AddLocation((pObj->GetUpVector() * deltaY * 0.01f) * -1);
+			if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
+				pObj->AddLocation(pObj->GetUpVector() * deltaX * -0.01f * zdir);
 			else
-				pObj->AddLocation((pObj->GetUpVector() * deltaY * 0.01f));
+				pObj->AddLocation(pObj->GetUpVector() * deltaX * 0.01f * zdir);
 		}
 		else if (Gizmo->GetType() == "ArrowZ")
 		{
-			if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
-				pObj->AddLocation(pObj->GetForwardVector() * deltaX * 0.01f * zdir);
+			if (pObj->GetUpVector().y >= 0)
+				pObj->AddLocation((pObj->GetForwardVector() * deltaY * -0.01f));
 			else
-				pObj->AddLocation(pObj->GetForwardVector() * deltaX * -0.01f * zdir);
+				pObj->AddLocation((pObj->GetForwardVector() * deltaY * 0.01f));
 		}
 
 	}
@@ -390,15 +395,15 @@ void UPlayer::ControlTranslation(USceneComponent* pObj, UPrimitiveComponent* Giz
 		}
 		else if (Gizmo->GetType() == "ArrowY")
 		{
-			pObj->AddLocation(FVector(0.0f, 1.0f, 0.0f) * deltaY * -0.01f);
+			if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
+				pObj->AddLocation(FVector(0.0f, 1.0f, 0.0f) * deltaX * -0.01f);
+			else
+				pObj->AddLocation(FVector(0.0f, 1.0f, 0.0f) * deltaX * 0.01f);
 		}
 		else if (Gizmo->GetType() == "ArrowZ")
 		{
+			pObj->AddLocation(FVector(0.0f, 0.0f, 1.0f) * deltaY * -0.01f);
 
-			if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
-				pObj->AddLocation(FVector(0.0f, 0.0f, 1.0f) * deltaX * 0.01f);
-			else
-				pObj->AddLocation(FVector(0.0f, 0.0f, 1.0f) * deltaX * -0.01f);
 		}
 	}
 }
@@ -416,16 +421,17 @@ void UPlayer::ControlScale(USceneComponent* pObj, UPrimitiveComponent* Gizmo, in
 	}
 	else if (Gizmo->GetType() == "ScaleY")
 	{
-		if (pObj->GetUpVector().y >= 0)
-			pObj->AddScale(FVector(0.0f, 1.0f, 0.0f) * deltaY * -0.01f);
+		if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
+			pObj->AddScale(FVector(0.0f, 1.0f, 0.0f) * deltaX  *-0.01f * zdir);
 		else
-			pObj->AddScale(FVector(0.0f, 1.0f, 0.0f) * deltaY * 0.01f);
+			pObj->AddScale(FVector(0.0f, 1.0f, 0.0f) * deltaX * 0.01f * zdir);
 	}
 	else if (Gizmo->GetType() == "ScaleZ")
 	{
-		if (GetWorld()->GetCamera()->GetForwardVector().x <= 0)
-			pObj->AddScale(FVector(0.0f, 0.0f, 1.0f) * deltaX * 0.01f * zdir);
+		if (pObj->GetUpVector().y >= 0)
+			pObj->AddScale(FVector(0.0f, 0.0f, 1.0f) * deltaY * -0.01f);
 		else
-			pObj->AddScale(FVector(0.0f, 0.0f, 1.0f) * deltaX * -0.01f * zdir);
+			pObj->AddScale(FVector(0.0f, 0.0f, 1.0f) * deltaY * 0.01f);
+
 	}
 }
