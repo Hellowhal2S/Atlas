@@ -4,6 +4,7 @@ void FRenderer::Initialize(FGraphicsDevice* graphics) {
     Graphics = graphics;
     CreateShader();
     CreateTextureShader();
+    CreateTextInstanceShader();
     CreateLineShader();
     CreateConstantBuffer();
     CreateLightingBuffer();
@@ -14,6 +15,7 @@ void FRenderer::Initialize(FGraphicsDevice* graphics) {
 void FRenderer::Release() {
     ReleaseShader();
     ReleaseTextureShader();
+    ReleaseTextShader();
     if (ConstantBuffer) ConstantBuffer->Release();
     if (LightingBuffer) LightingBuffer->Release();
     if (NormalConstantBuffer) NormalConstantBuffer->Release();
@@ -556,6 +558,47 @@ void FRenderer::PrepareSubUVConstant()
     {
         Graphics->DeviceContext->VSSetConstantBuffers(1, 1, &SubUVConstantBuffer);
         Graphics->DeviceContext->PSSetConstantBuffers(1, 1, &SubUVConstantBuffer);
+    }
+}
+
+void FRenderer::CreateTextInstanceShader()
+{
+    ID3DBlob* vertextextureshaderCSO;
+    ID3DBlob* pixeltextureshaderCSO;
+
+    HRESULT hr;
+    hr = D3DCompileFromFile(L"TextInstance.hlsl", nullptr, nullptr, "mainVS", "vs_5_0", 0, 0, &vertextextureshaderCSO, nullptr);
+    if (FAILED(hr))
+    {
+        Console::GetInstance().AddLog(LogLevel::Warning, "VertexShader Error");
+    }
+    Graphics->Device->CreateVertexShader(vertextextureshaderCSO->GetBufferPointer(), vertextextureshaderCSO->GetBufferSize(), nullptr, &VertexTextShader);
+
+    hr = D3DCompileFromFile(L"TextInstance.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixeltextureshaderCSO, nullptr);
+    if (FAILED(hr))
+    {
+        Console::GetInstance().AddLog(LogLevel::Warning, "PixelShader Error");
+    }
+    Graphics->Device->CreatePixelShader(pixeltextureshaderCSO->GetBufferPointer(), pixeltextureshaderCSO->GetBufferSize(), nullptr, &PixelTextShader);
+
+    //자료구조 변경 필요
+    //TextureStride = sizeof(FVertexTexture);
+    vertextextureshaderCSO->Release();
+    pixeltextureshaderCSO->Release();
+}
+
+void FRenderer::ReleaseTextShader()
+{
+    if (VertexTextShader)
+    {
+        VertexTextShader->Release();
+        VertexTextShader = nullptr;
+    }
+
+    if (PixelTextShader)
+    {
+        PixelTextShader->Release();
+        PixelTextShader = nullptr;
     }
 }
 

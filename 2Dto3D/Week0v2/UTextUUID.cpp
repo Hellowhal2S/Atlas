@@ -36,4 +36,16 @@ void UTextUUID::SetUUID(uint32 UUID)
 	SetText(std::to_wstring(UUID));
 }
 
+void UTextUUID::RenderInstance()
+{
+	//SetShader, InputLayer(null)
+	//SetConstant
+	//UpdateConstant
+	//SetVertexBuffer(null)
+	//SetTextureSRV
+	//SetSampler
+
+	//DrawInstanced
+}
+
 

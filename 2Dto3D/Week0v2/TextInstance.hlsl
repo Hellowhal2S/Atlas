@@ -10,7 +10,7 @@ struct VS_INPUT
 struct PS_INPUT
 {
     float4 Position : SV_Position;
-    float4 texCoord : TEXCOORD;
+    float2 texCoord : TEXCOORD;
 };
 
 cbuffer MatrixBuffer : register(b0)
@@ -20,6 +20,7 @@ cbuffer MatrixBuffer : register(b0)
 
 cbuffer SubUVOffset : register(b1)
 {
+    float3 uuidOrigin;
     float widthOffset;
     float heightOffset;
 };
@@ -41,6 +42,7 @@ PS_INPUT mainVS(VS_INPUT input)
     
     float3 vertex = quad[input.vertexID];
     vertex.x += 2 * input.instanceID;
+    vertex += uuidOrigin;
     
     output.Position = mul(float4(vertex, 1.0f), MVP);    
     
