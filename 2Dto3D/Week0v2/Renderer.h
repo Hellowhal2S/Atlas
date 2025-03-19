@@ -115,9 +115,10 @@ public:
 public: //텍스트 인스턴스용 쉐이더
 	ID3D11VertexShader* VertexTextShader = nullptr;
 	ID3D11PixelShader* PixelTextShader = nullptr;
-
 	void CreateTextInstanceShader();
 	void ReleaseTextShader();
+	
+	void CreateTextStructuredBuffer();
 
 public: // line shader
 	void PrepareLineShader();

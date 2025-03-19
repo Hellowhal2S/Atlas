@@ -64,7 +64,7 @@ PS_INPUT mainVS(VS_INPUT input)
     return output;
 }
 
-float4 mainPS(PS_INPUT input)
+float4 mainPS(PS_INPUT input) : SV_Target
 {
     float2 uv = input.texCoord;
     float4 col = gTexture.Sample(gSampler, uv);

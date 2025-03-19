@@ -573,10 +573,16 @@ void FRenderer::CreateTextInstanceShader()
         Console::GetInstance().AddLog(LogLevel::Warning, "VertexShader Error");
     }
     Graphics->Device->CreateVertexShader(vertextextureshaderCSO->GetBufferPointer(), vertextextureshaderCSO->GetBufferSize(), nullptr, &VertexTextShader);
-
-    hr = D3DCompileFromFile(L"TextInstance.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixeltextureshaderCSO, nullptr);
+    ID3DBlob* errorBlob = nullptr;
+    hr = D3DCompileFromFile(L"TextInstance.hlsl", nullptr, nullptr, "mainPS", "ps_5_0", 0, 0, &pixeltextureshaderCSO, &errorBlob);
     if (FAILED(hr))
     {
+        if (errorBlob)
+        {
+            OutputDebugStringA((char*)errorBlob->GetBufferPointer());  // 디버그 창에 오류 메시지 출력
+            MessageBoxA(nullptr, (char*)errorBlob->GetBufferPointer(), "Pixel Shader Compilation Error", MB_OK);
+            errorBlob->Release();
+        }
         Console::GetInstance().AddLog(LogLevel::Warning, "PixelShader Error");
     }
     Graphics->Device->CreatePixelShader(pixeltextureshaderCSO->GetBufferPointer(), pixeltextureshaderCSO->GetBufferSize(), nullptr, &PixelTextShader);
@@ -601,6 +607,39 @@ void FRenderer::ReleaseTextShader()
         PixelTextShader = nullptr;
     }
 }
+
+void FRenderer::CreateTextStructuredBuffer()
+{
+    /*
+    
+    D3D11_BUFFER_DESC sbDesc = {};
+    sbDesc.Usage = D3D11_USAGE_DEFAULT;
+    sbDesc.ByteWidth = sizeof(SubUV) * 10;
+    sbDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    sbDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    sbDesc.StructureByteStride = sizeof(SubUV);
+
+    D3D11_SUBRESOURCE_DATA srd = {};
+    srd.pSysMem = subUVData;
+
+    ID3D11Buffer* subUVBuffer = nullptr;
+    device->CreateBuffer(&sbDesc, &srd, &subUVBuffer);
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+    srvDesc.Buffer.ElementOffset = 0;
+    srvDesc.Buffer.NumElements = 10;
+
+    ID3D11ShaderResourceView* subUVSRV = nullptr;
+    device->CreateShaderResourceView(subUVBuffer, &srvDesc, &subUVSRV);
+    context->VSSetShaderResources(1, 1, &subUVSRV);
+    
+    */
+}
+
+
+
 
 void FRenderer::PrepareLineShader()
 {
